@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="paket.references" />
+        <Compile Include="Helper.fs" />
+        <Compile Include="FSharpLuLikeSerializer.fs" />
+        <Compile Include="Scenarios\TestTypes.fs" />
+        <Compile Include="Scenarios\ValueTypeTests.fs" />
+        <Compile Include="Scenarios\OptionalAndNullFSharpTests.fs" />
+        <Compile Include="Scenarios\RecordTypeTests.fs" />
+        <Compile Include="Scenarios\RecursiveRecordTests.fs" />
+        <Compile Include="Scenarios\TupleTypeTests.fs" />
+        <Compile Include="Scenarios\DUTypeTests.fs" />
+        <Compile Include="Scenarios\CollectionTypeTests.fs" />
+        <Compile Include="Scenarios\AttributeTests.fs" />
+        <Compile Include="Expecto.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\FSharp.CrystalLake\FSharp.CrystalLake.fsproj" />
+    </ItemGroup>
+    <Import Project="..\..\.paket\Paket.Restore.targets" />
+
+</Project>

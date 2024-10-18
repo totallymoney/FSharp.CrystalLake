@@ -1,0 +1,8 @@
+framework auto-detect
+source https://api.nuget.org/v3/index.json
+
+nuget FSharp.Core
+nuget Expecto
+nuget FSharp.SystemTextJson
+nuget Newtonsoft.Json.Schema 4.0.1
+nuget System.Text.Json 8.0.4
