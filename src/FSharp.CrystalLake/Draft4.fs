@@ -195,7 +195,13 @@ and itemsFromTuple (tupleElements : TupleElement array)
     |> Array.mapi (fun i e ->
         match e with
         | InlineElement m ->
-            buildNode m ((string i)::schemaPath) defs
+            match m with
+            | Value _  ->
+                // It doesn't add anything to include a title for a value type
+                // in a tuple
+                { buildNode m ((string i)::schemaPath) defs with
+                    title = None }
+            | _ -> buildNode m ((string i)::schemaPath) defs
         | OptionalElement (InlineElement m) ->
             buildNode (Optional m) ((string i)::schemaPath) defs
         | ReferenceElement (typ, str) ->
@@ -203,7 +209,7 @@ and itemsFromTuple (tupleElements : TupleElement array)
         | OptionalElement (ReferenceElement (typ, str)) ->
             // normally with optionals we can just add a "null" to the type like
             // below. But that's not valid with $refs that aren't supposed to have
-            // any other types. So we have to use the more long winded oneOf
+            // any other types. So we have to use the more long-winded oneOf
             failwith "Cannot currently create optional reference tuple elements"
         | OptionalElement (OptionalElement _)  ->
             failwith "Nested optional elements are not currently supported")

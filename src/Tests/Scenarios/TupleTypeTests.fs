@@ -7,8 +7,6 @@ open Expecto
 open Expecto.Flip
 open TestTypes
 
-// TODO: Do tuple items need titles when they're basic value types?? I don't think so
-
 [<Tests>]
 let tests =
     testList "FSharp Tuples schema generation tests" [
@@ -20,16 +18,13 @@ let tests =
   "type": "array",
   "items": [
     {
-      "title": "String",
       "type": "string"
     },
     {
-      "title": "Int32",
       "type": "integer",
       "format": "int32"
     },
     {
-      "title": "Boolean",
       "type": "boolean"
     }
   ],
@@ -61,16 +56,13 @@ let tests =
   ],
   "items": [
     {
-      "title": "String",
       "type": "string"
     },
     {
-      "title": "Int32",
       "type": "integer",
       "format": "int32"
     },
     {
-      "title": "Boolean",
       "type": "boolean"
     }
   ],
@@ -112,14 +104,12 @@ let tests =
   "type": "array",
   "items": [
     {
-      "title": "String",
       "type": [
         "string",
         "null"
       ]
     },
     {
-      "title": "Int32",
       "type": [
         "integer",
         "null"
@@ -127,7 +117,6 @@ let tests =
       "format": "int32"
     },
     {
-      "title": "Boolean",
       "type": [
         "boolean",
         "null"
@@ -173,7 +162,6 @@ let tests =
   "type": "array",
   "items": [
     {
-      "title": "Int32",
       "type": [
         "integer",
         "null"
@@ -181,7 +169,6 @@ let tests =
       "format": "int32"
     },
     {
-      "title": "Boolean",
       "type": [
         "boolean",
         "null"
@@ -227,17 +214,14 @@ let tests =
   "type": "array",
   "items": [
     {
-      "title": "Single",
       "type": "number",
       "format": "float"
     },
     {
-      "title": "DateTimeOffset",
       "type": "string",
       "format": "date-time"
     },
     {
-      "title": "String",
       "type": "string"
     }
   ],
@@ -271,11 +255,9 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "Boolean",
           "type": "boolean"
         },
         {
-          "title": "Int64",
           "type": "integer",
           "format": "int64"
         }
@@ -288,11 +270,9 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "String",
           "type": "string"
         },
         {
-          "title": "Decimal",
           "type": "number",
           "format": "decimal"
         }
@@ -326,7 +306,6 @@ let tests =
   "type": "array",
   "items": [
     {
-      "title": "String",
       "type": [
         "string",
         "null"
@@ -381,7 +360,6 @@ let tests =
   "type": "array",
   "items": [
     {
-      "title": "String",
       "type": [
         "string",
         "null"
@@ -392,7 +370,6 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "Boolean",
           "type": "boolean"
         },
         {
@@ -446,7 +423,6 @@ let tests =
   "type": "array",
   "items": [
     {
-      "title": "Int32",
       "type": "integer",
       "format": "int32"
     },
@@ -506,7 +482,6 @@ let tests =
   "type": "array",
   "items": [
     {
-      "title": "Int32",
       "type": "integer",
       "format": "int32"
     },
@@ -515,7 +490,6 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "Int32",
           "type": "integer",
           "format": "int32"
         },
@@ -531,7 +505,6 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "Boolean",
           "type": "boolean"
         },
         {
@@ -539,7 +512,6 @@ let tests =
           "type": "array",
           "items": [
             {
-              "title": "Int32",
               "type": "integer",
               "format": "int32"
             },
@@ -608,7 +580,6 @@ let tests =
   "type": "array",
   "items": [
     {
-      "title": "String",
       "type": "string"
     },
     {
@@ -674,7 +645,6 @@ let tests =
   "type": "array",
   "items": [
     {
-      "title": "String",
       "type": "string"
     },
     {
@@ -762,7 +732,6 @@ let tests =
 //  "type": "array",
 //  "items": [
 //    {
-//      "title": "Int32",
 //      "type": "integer",
 //      "format": "int32"
 //    },
@@ -846,11 +815,9 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "String",
           "type": "string"
         },
         {
-          "title": "Decimal",
           "type": "number",
           "format": "decimal"
         }
@@ -893,11 +860,9 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "String",
           "type": "string"
         },
         {
-          "title": "Decimal",
           "type": "number",
           "format": "decimal"
         }
@@ -953,12 +918,10 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "Char",
           "type": "string",
           "format": "char"
         },
         {
-          "title": "Byte",
           "type": "integer",
           "format": "uint8"
         }
@@ -970,11 +933,9 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "String",
           "type": "string"
         },
         {
-          "title": "Decimal",
           "type": "number",
           "format": "decimal"
         }
@@ -1019,11 +980,9 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "String",
           "type": "string"
         },
         {
-          "title": "Decimal",
           "type": "number",
           "format": "decimal"
         }
@@ -1035,11 +994,9 @@ let tests =
       "type": "array",
       "items": [
         {
-          "title": "String",
           "type": "string"
         },
         {
-          "title": "Decimal",
           "type": "number",
           "format": "decimal"
         }
@@ -1087,11 +1044,9 @@ let tests =
 //      "type": "array",
 //      "items": [
 //        {
-//          "title": "String",
 //          "type": "string"
 //        },
 //        {
-//          "title": "Decimal",
 //          "type": "number",
 //          "format": "decimal"
 //        }
@@ -1103,11 +1058,9 @@ let tests =
 //      "type": "array",
 //      "items": [
 //        {
-//          "title": "String",
 //          "type": "string"
 //        },
 //        {
-//          "title": "Decimal",
 //          "type": "number",
 //          "format": "decimal"
 //        }
