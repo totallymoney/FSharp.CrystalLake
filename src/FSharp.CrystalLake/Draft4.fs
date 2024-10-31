@@ -7,10 +7,6 @@ type TypeField =
     | Simple of string
     | Composite of string []
 
-//type Draft4Property =
-//    { ``type`` : TypeField
-//      format : string option }
-
 // Json Schema draft 4 RFC:
 // https://datatracker.ietf.org/doc/html/draft-zyp-json-schema-03#anchor8
 
@@ -19,6 +15,7 @@ and Draft4SchemaNode =
       ``type`` : TypeField option
       format : string option
       items : Draft4SchemaNode [] option
+      oneOf: Draft4SchemaNode [] option
       properties : Map<string, Draft4SchemaNode> option
       required : string [] option
       additionalItems : bool option
@@ -30,10 +27,12 @@ and Draft4SchemaNode =
 type Draft4Schema =
     { ``$schema`` : string
       title : string option
-      // type is technically optional per the spec for v4, but we wll always have it
+      // type is technically optional per the spec for v4, but we will always
+      // have it at the root schema
       ``type`` : TypeField
       format : string option
       items : Draft4SchemaNode [] option
+      oneOf: Draft4SchemaNode [] option
       properties : Map<string, Draft4SchemaNode> option
       required : string [] option
       additionalItems : bool option
@@ -47,6 +46,7 @@ module Draft4Schema =
           ``type`` = node.``type`` |> Option.get
           format = node.format
           items = node.items
+          oneOf = node.oneOf
           properties = node.properties
           required = node.required
           additionalItems = node.additionalItems
@@ -59,12 +59,33 @@ let defaultDraft4SchemaNode =
       ``type`` = None
       format = None
       items = None
+      oneOf = None
       properties = None
       required = None
       additionalItems = None
       additionalProperties = None
       ``$ref`` = None }
 
+let nullSchemaNode =
+    { defaultDraft4SchemaNode with ``type`` = Some (Simple "null") }
+
+type SchemaPathNode =
+    { PathKey: string
+      CrystalLakeRef: string option }
+
+module SchemaPath =
+    let pathToString nodes =
+        let schemaPath = nodes |> List.map _.PathKey
+        System.String.Join("/", schemaPath)
+
+    let rec prevRefPath ref nodes =
+        match nodes with
+        | [] -> None
+        | x::xs when x.CrystalLakeRef = Some ref -> Some nodes
+        | _::xs -> prevRefPath ref xs
+
+    let simple pathKey =
+        { PathKey = pathKey; CrystalLakeRef = None }
 
 // draft 4, etc supports 7 primitive types:
 //   array    A JSON array.
@@ -130,13 +151,14 @@ let formatFromValueType (typ : ValueType) =
     | Double -> Some "double" | Float -> Some "float"
     | Decimal -> Some "decimal"
 
-let rec buildProperty (schemaPath : string list)
+let rec buildProperty (schemaPath : SchemaPathNode list)
                       (defs : Map<string, ModelRepresentation>)
                       (prop : PropertyModel) =
     match prop.Representation with
     | Inline representation ->
+        let propPath = SchemaPath.simple prop.Name
         prop.Name,
-        { buildNode representation (prop.Name::schemaPath) defs with
+        { buildNode representation (propPath::schemaPath) defs with
             // while having a title would be valid in a technical sense,
             // it's redundant and potentially confusing since it's in the
             // property name, so we clear it
@@ -154,16 +176,14 @@ let rec buildProperty (schemaPath : string list)
             schemaPath
             |> List.tail // head will be "properties"
             |> List.rev // schemaPath is in reverse order
-        let jsonPointer = System.String.Join("/", "#"::schemaPath)
-        prop.Name,
-        { defaultDraft4SchemaNode with
-            ``$ref`` = Some jsonPointer }
+        let jsonPointer = SchemaPath.pathToString schemaPath
+        prop.Name, { defaultDraft4SchemaNode with ``$ref`` = Some jsonPointer }
 
 
 and propertiesFromRecord (m : RecordModel)
-                         (schemaPath : string list)
+                         (schemaPath : SchemaPathNode list)
                          (defs : Map<string, ModelRepresentation>) =
-    let schemaPath = "properties" :: schemaPath
+    let schemaPath = { PathKey = "properties"; CrystalLakeRef = None }:: schemaPath
     m.Properties
     |> Array.map (buildProperty schemaPath defs)
     // TODO: converting to a map losses the ordering we have. The properties on
@@ -187,35 +207,45 @@ and requiredPropertiesFromRecord (m : RecordModel) =
         | xs -> Some xs
 
 and itemsFromTuple (tupleElements : TupleElement array)
-                   (schemaPath : string list)
+                   (schemaPath : SchemaPathNode list)
                    (defs : Map<string, ModelRepresentation>)
                    : Draft4SchemaNode [] =
-    let schemaPath = "items" :: schemaPath
+    let schemaPath = SchemaPath.simple "items" :: schemaPath
     tupleElements
     |> Array.mapi (fun i e ->
+        let elementPath = SchemaPath.simple (string i) :: schemaPath
         match e with
         | InlineElement m ->
             match m with
             | Value _  ->
                 // It doesn't add anything to include a title for a value type
                 // in a tuple
-                { buildNode m ((string i)::schemaPath) defs with
-                    title = None }
-            | _ -> buildNode m ((string i)::schemaPath) defs
+                { buildNode m elementPath defs with title = None }
+            | _ -> buildNode m elementPath defs
         | OptionalElement (InlineElement m) ->
-            buildNode (Optional m) ((string i)::schemaPath) defs
+            buildNode (Optional m) elementPath defs
         | ReferenceElement (typ, str) ->
-            { defaultDraft4SchemaNode with ``$ref`` = Some $"#/definitions/{str}" }
+            let path =
+                SchemaPath.prevRefPath str schemaPath
+                |> Option.map SchemaPath.pathToString
+                |> Option.orElse (Some $"#/definitions/{str}")
+            { defaultDraft4SchemaNode with ``$ref`` = path }
         | OptionalElement (ReferenceElement (typ, str)) ->
-            // normally with optionals we can just add a "null" to the type like
-            // below. But that's not valid with $refs that aren't supposed to have
-            // any other types. So we have to use the more long-winded oneOf
-            failwith "Cannot currently create optional reference tuple elements"
+            let path =
+                SchemaPath.prevRefPath str schemaPath
+                |> Option.map SchemaPath.pathToString
+                |> Option.orElse (Some $"#/definitions/{str}")
+            // normally with optionals we can just add a "null" to the type, but
+            // that's not valid with $refs that aren't supposed to have any
+            // other types. So we have to use the more long-winded `oneOf`
+            let ref = { defaultDraft4SchemaNode with ``$ref`` = path }
+            { defaultDraft4SchemaNode with
+               oneOf = Some [| ref; nullSchemaNode |] }
         | OptionalElement (OptionalElement _)  ->
             failwith "Nested optional elements are not currently supported")
 
 and buildNode (m : ModelRepresentation)
-              (schemaPath : string list)
+              (schemaPath : SchemaPathNode list)
               (defs : Map<string, ModelRepresentation>)
               : Draft4SchemaNode =
     match m with
@@ -264,14 +294,15 @@ and buildNode (m : ModelRepresentation)
         { node with ``type`` = newType }
     | Unevaluated _ -> failwithf "buildNode Unevaluated is not supported"
 
-let buildDefinitions (eval : TypeEvaluation) =
-    let schemaPath = ["definitions"]
+let buildDefinitions (schemaPath : SchemaPathNode list) (eval : TypeEvaluation) =
+    let schemaPath = { PathKey = "definitions"; CrystalLakeRef = None }::schemaPath
     // We'll need a better way to resolve names and deal with conflicts
     eval.Definitions.Values
     |> Seq.map (fun model ->
         let defName = (ModelRepresentation.getUnderlyingType model).Name
+        let pathNode = { PathKey = defName; CrystalLakeRef = Some defName }
         defName,
-        { buildNode model (defName::schemaPath) eval.Definitions with
+        { buildNode model (pathNode::schemaPath) eval.Definitions with
             // strip out the title from the definition since it will
             // be part of the property name
             title = None })
@@ -280,10 +311,13 @@ let buildDefinitions (eval : TypeEvaluation) =
 let fromModel (eval : TypeEvaluation) =
     // TODO: We need to figure out the names before doing anything else
     // should we do that in the Model code though??
+    let schemaPath =
+        { PathKey = "#"
+          CrystalLakeRef = Some (ModelRepresentation.getTitle eval.RootModel) }
     let schema =
         Draft4Schema.fromSchemaNode
-            (buildNode eval.RootModel [] eval.Definitions)
-    let definitions = buildDefinitions eval
+            (buildNode eval.RootModel [schemaPath] eval.Definitions)
+    let definitions = buildDefinitions [schemaPath] eval
     match Map.isEmpty definitions with
     | false -> { schema with definitions = Some definitions }
     | true -> schema

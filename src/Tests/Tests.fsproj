@@ -15,6 +15,7 @@
         <Compile Include="Scenarios\RecordTypeTests.fs" />
         <Compile Include="Scenarios\RecursiveRecordTests.fs" />
         <Compile Include="Scenarios\TupleTypeTests.fs" />
+        <Compile Include="Scenarios\RecordTupleRecursionTests.fs" />
         <Compile Include="Scenarios\DUTypeTests.fs" />
         <Compile Include="Scenarios\CollectionTypeTests.fs" />
         <Compile Include="Scenarios\AttributeTests.fs" />
